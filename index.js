@@ -97,3 +97,4 @@ function* generateShare3Candidates(limit = 1000000) {
 
   console.log('Fim das tentativas (limit reached)');
 })();
+
