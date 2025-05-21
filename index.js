@@ -5,27 +5,51 @@ const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
 const sss = require('shamirs-secret-sharing');
 
-// Essas são suas "shares", mas elas precisam estar em Buffer (bytes).
-// Como você tinha as palavras, vou mostrar aqui como transformar strings em buffer.
+// As duas shares do desafio (transforme as palavras em uma string só, sem espaços)
+// Depois converta para Buffer com UTF-8.
 
-const share1 = Buffer.from('sessãócharutouvaalegreútilagitarrfatalpensamentomuitoqualquerbraçoalheio');
-const share2 = Buffer.from('relógiofrescesegurançacampocuidadoesforçogorilavelocidadeplásticocomumtomateeco');
+const share1 = Buffer.from(
+  'sessãocharutouvaalegreútilagitarfatalpensamentomuitoqualquerbraçoalheio',
+  'utf8'
+);
+
+const share2 = Buffer.from(
+  'relógiofrescesegurançacampocuidadoesforçogorilavelocidadeplásticocomumtomateeco',
+  'utf8'
+);
 
 async function main() {
   try {
-    // Combine as shares para recuperar o segredo (buffer)
+    // Combinar shares para recuperar segredo (buffer)
     const secret = sss.combine([share1, share2]);
-    
-    // Transformar o segredo (buffer) em string do mnemônico
+
+    // Converter segredo para string (mnemônico)
     const mnemonic = secret.toString('utf8');
-    
+
     console.log('Mnemônico recuperado:', mnemonic);
-    
-    // Validar o mnemônico
+
+    // Validar mnemônico
     if (!bip39.validateMnemonic(mnemonic)) {
       console.error('Mnemônico inválido!');
       return;
     }
+
+    // Derivar seed e chave BTC
+    const seed = await bip39.mnemonicToSeed(mnemonic);
+    const root = bitcoin.bip32.fromSeed(seed);
+
+    // Caminho BIP84 para segwit P2WPKH
+    const child = root.derivePath("m/84'/0'/0'/0/0");
+    const { address } = bitcoin.payments.p2wpkh({ pubkey: child.publicKey });
+
+    console.log('Endereço BTC derivado:', address);
+  } catch (err) {
+    console.error('Erro na recomposição:', err);
+  }
+}
+
+main();
+
     
     // Derivar a seed
     const seed = await bip39.mnemonicToSeed(mnemonic);
