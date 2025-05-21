@@ -5,61 +5,54 @@ const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
 const sss = require('shamirs-secret-sharing');
 
-// As shares do seu desafio, em palavras (arrays)
-const sharesWords = [
-  ['sessão', 'charuto', 'uva', 'alegre', 'útil', 'agitar', 'fatal', 'pensamento', 'muito', 'qualquer', 'braço', 'alheio'],
-  ['relógio', 'fresco', 'segurança', 'campo', 'cuidado', 'esforço', 'gorila', 'velocidade', 'plástico', 'comum', 'tomate', 'eco']
+// Função para converter array de palavras para buffer usando bip39.mnemonicToEntropy
+function wordsToBuffer(words) {
+  const mnemonic = words.join(' ');
+  return Buffer.from(bip39.mnemonicToEntropy(mnemonic), 'hex');
+}
+
+// Shares (2 de 3 necessárias do desafio)
+const share1Words = [
+  'sessão', 'charuto', 'uva', 'alegre', 'útil', 'agitar', 'fatal',
+  'pensamento', 'muito', 'qualquer', 'braço', 'alheio'
 ];
 
-// Função para converter array de palavras em Buffer (bytes)
-function wordsToBuffer(words) {
-  // Junta as palavras com espaço para formar o mnemônico parcial
-  const phrase = words.join(' ');
-  // Converte para buffer utf8
-  return Buffer.from(phrase, 'utf8');
-}
+const share2Words = [
+  'relógio', 'fresco', 'segurança', 'campo', 'cuidado', 'esforço',
+  'gorila', 'velocidade', 'plástico', 'comum', 'tomate', 'eco'
+];
+
+// Converte as shares para buffers binários
+const share1 = wordsToBuffer(share1Words);
+const share2 = wordsToBuffer(share2Words);
 
 async function main() {
   try {
-    // Transforma as shares em buffers
-    const sharesBuffers = sharesWords.map(wordsToBuffer);
+    // Combina as shares para recuperar o buffer secreto
+    const secret = sss.combine([share1, share2]);
     
-    // Usa Shamir para recompor o segredo original (mnemônico completo) a partir das shares
-    const secret = sss.combine(sharesBuffers);
-
-    // O segredo é um buffer que representa o mnemônico completo
-    const mnemonic = secret.toString('utf8');
-
+    // O buffer secreto é a entropia original, converte para mnemônico BIP39
+    const mnemonic = bip39.entropyToMnemonic(secret.toString('hex'));
+    
     console.log('Mnemônico recuperado:', mnemonic);
-
-    // Valida o mnemônico recomposto
+    
     if (!bip39.validateMnemonic(mnemonic)) {
-      console.error('Mnemônico inválido! Verifique as shares.');
+      console.error('Mnemônico inválido!');
       return;
     }
-
-    // Deriva a seed BIP39 a partir do mnemônico
+    
+    // Derivar seed do mnemônico
     const seed = await bip39.mnemonicToSeed(mnemonic);
-
-    // Deriva a chave BIP32 a partir da seed
+    
+    // Derivar chave e endereço usando derivação padrão do desafio m/84'/0'/0'/0/0 (SegWit)
     const root = bitcoin.bip32.fromSeed(seed);
-
-    // Deriva a chave na path BIP84 padrão para SegWit Native (m/84'/0'/0'/0/0)
     const child = root.derivePath("m/84'/0'/0'/0/0");
-
-    // Obtém o endereço P2WPKH (SegWit Native Bech32)
     const { address } = bitcoin.payments.p2wpkh({ pubkey: child.publicKey });
-
+    
     console.log('Endereço Bitcoin derivado:', address);
-
   } catch (err) {
-    console.error('Erro durante recomposição:', err);
+    console.error('Erro na recomposição:', err);
   }
 }
 
 main();
-
-
-main();
-
-
