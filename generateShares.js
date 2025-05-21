@@ -4,29 +4,21 @@ const require = createRequire(import.meta.url);
 const bip39 = require('bip39');
 const sss = require('shamirs-secret-sharing');
 
-const mnemonic = 'coloque sua frase mnemônica original de 12 palavras aqui';
+const mnemonic = 'coloque seu mnemônico de 12 palavras aqui separado por espaço';
 
-const secret = Buffer.from(mnemonic, 'utf8');
+// Validar o mnemônico antes
+if (!bip39.validateMnemonic(mnemonic)) {
+  console.error('Mnemônico inválido!');
+  process.exit(1);
+}
 
-const shares = sss.split(secret, { shares: 5, threshold: 3 });
+// Transformar o mnemônico em Buffer (bytes)
+const secretBuffer = Buffer.from(mnemonic, 'utf8');
 
-shares.forEach((share, i) => {
-  console.log(`Share ${i + 1}:`, share.toString('utf8'));
+// Gerar 5 shares, com limite 3 (3 necessárias para recuperar)
+const shares = sss.split(secretBuffer, { shares: 5, threshold: 3 });
+
+console.log('Shares geradas (hex):');
+shares.forEach((share, idx) => {
+  console.log(`Share ${idx + 1}:`, share.toString('hex'));
 });
-
-}
-
-async function main() {
-  // Transformar mnemônico em buffer concatenando as palavras (sem espaço)
-  const secretBuffer = Buffer.from(originalMnemonic.replace(/\s+/g, ''), 'utf8');
-
-  // Criar 5 shares, threshold 3
-  const shares = sss.split(secretBuffer, { shares: 5, threshold: 3 });
-
-  // Mostrar as 5 shares como palavras
-  shares.forEach((share, i) => {
-    printShare(`Share ${i+1}`, share);
-  });
-}
-
-main();
