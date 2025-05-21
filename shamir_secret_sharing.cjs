@@ -1,6 +1,4 @@
+// Apenas exporta o pacote shamirs-secret-sharing para ser usado no index.js
+import sss from 'shamirs-secret-sharing';
 
-// Coloque aqui a implementação necessária para shamir_secret_sharing.js
-// Ou importe a implementação real do repositório Bitaps
-module.exports = {
-  // Implementação placeholder
-};
+export default sss;
