@@ -1,7 +1,6 @@
-
-const bip39 = require('bip39');
-const bitcoin = require('bitcoinjs-lib');
-const shamir = require('./shamir_secret_sharing.js');
+import bip39 from 'bip39';
+import * as bitcoin from 'bitcoinjs-lib';
+import shamir from './shamir_secret_sharing.js';
 
 const share1 = [
   'sessão', 'charuto', 'uva', 'alegre', 'útil', 'agitar', 'fatal', 'pensamento', 'muito', 'qualquer', 'braço', 'alheio'
