@@ -3,7 +3,7 @@ const require = createRequire(import.meta.url);
 
 const bip39 = require('bip39');
 const bitcoin = require('bitcoinjs-lib');
-const shamir = require('./shamir_secret_sharing.js');
+const shamir = require('./shamir_secret_sharing.cjs');
 
 const share1 = [
   'sessão', 'charuto', 'uva', 'alegre', 'útil', 'agitar', 'fatal', 'pensamento', 'muito', 'qualquer', 'braço', 'alheio'
